@@ -382,4 +382,26 @@
   // Call the function every second
   const countdownInterval = setInterval(updateCountdown, 1000);
   updateCountdown(); // Initial call to avoid delay
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const number = urlParams.get("n");
+
+  // Default to "Dear" if number is not in the URL
+  let guestName = "Dear";
+
+  if (number) {
+    // Fetch the names from the JSON file
+    $.getJSON("names.json", function (data) {
+      // Check if the number exists in the JSON data
+      if (data[number]) {
+        guestName = data[number];
+      }
+      // Set the guest name in the HTML
+      $("#guest-name-main-page").text(guestName);
+      $("#guest-name-second-page").text(guestName);
+    });
+  } else {
+    $("#guest-name-main-page").text(guestName);
+    $("#guest-name-second-page").text(guestName);
+  }
 })(jQuery);
