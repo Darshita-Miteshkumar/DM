@@ -383,26 +383,21 @@
   const countdownInterval = setInterval(updateCountdown, 1000);
   updateCountdown(); // Initial call to avoid delay
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const number = urlParams.get("n");
+  // Function to extract URL parameters
+  function getParameterByName(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
 
-  // Default to "Dear" if number is not in the URL
-  let guestName = "Dear";
+  // Get the 'name' parameter from the URL
+  const guestName = getParameterByName("name");
 
-  if (number) {
-    // Fetch the names from the JSON file
-    $.getJSON("names.json", function (data) {
-      // Check if the number exists in the JSON data
-      console.log("NAME : ", data);
-      if (data[number]) {
-        guestName = data[number];
-      }
-      // Set the guest name in the HTML
-      $("#guest-name-main-page").text(guestName);
-      $("#guest-name-second-page").text(guestName);
-    });
+  // Display the guest name or fallback to 'Dear'
+  if (guestName) {
+    $("#guest-name-main-page").text(decodeURIComponent(guestName));
+    $("#guest-name-second-page").text(decodeURIComponent(guestName));
   } else {
-    $("#guest-name-main-page").text(guestName);
-    $("#guest-name-second-page").text(guestName);
+    $("#guest-name-main-page").text("Dear");
+    $("#guest-name-second-page").text("Dear");
   }
 })(jQuery);
