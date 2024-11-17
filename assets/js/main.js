@@ -393,6 +393,7 @@
     // Fetch the names from the JSON file
     $.getJSON("names.json", function (data) {
       // Check if the number exists in the JSON data
+      console.log("NAME : ", data);
       if (data[number]) {
         guestName = data[number];
       }

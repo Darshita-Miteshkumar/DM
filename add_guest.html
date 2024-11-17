@@ -207,40 +207,57 @@
                         <script src="assets/js/jquery-3.4.1.min.js"></script>
                         <script defer>
                             $(document).ready(function () {
-                                const namesFilePath = "names.json";
                                 const baseUrl = "https://darshita-miteshkumar.github.io/DM";
+                                const apiBaseUrl = "https://api.github.com";
+                                const owner = "Darshita-Miteshkumar"; // Replace with your GitHub username
+                                const repo = "DM"; // Replace with your repository name
+                                const filePath = "names.json";
+                                const token = "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"; // Replace with your GitHub token
 
-                                $("#add-guest-form").on("submit", function (event) {
+                                $("#add-guest-form").on("submit", async function (event) {
                                     event.preventDefault();
                                     const guestName = $("#guest-name").val().trim();
 
                                     if (guestName) {
-                                        // Fetch existing names.json
-                                        $.getJSON(namesFilePath, function (data) {
-                                            // Find the highest number in the current data
-                                            const keys = Object.keys(data).map(Number);
-                                            const newNumber = keys.length ? Math.max(...keys) + 1 : 1;
-
-                                            // Add the new guest to the JSON object
-                                            data[newNumber] = guestName;
-
-                                            // Save the updated JSON back to the server
-                                            $.ajax({
-                                                url: namesFilePath,
-                                                type: "POST", // Simulating saving the JSON
-                                                data: JSON.stringify(data),
-                                                contentType: "application/json",
-                                                success: function () {
-                                                    // Generate the personalized URL
-                                                    const newUrl = `${baseUrl}?n=${newNumber}`;
-                                                    $("#generated-link").text(`Generated URL: ${newUrl}`);
-                                                    $("#copy-link").show().data("url", newUrl);
-                                                },
-                                                error: function () {
-                                                    alert("Error saving the guest data. Ensure server supports write operations.");
-                                                }
+                                        try {
+                                            // Step 1: Fetch the current names.json content
+                                            const getFileResponse = await fetch(`${apiBaseUrl}/repos/${owner}/${repo}/contents/${filePath}`, {
+                                                headers: { Authorization: `Bearer ${token}` },
                                             });
-                                        });
+                                            const fileData = await getFileResponse.json();
+                                            const content = JSON.parse(atob(fileData.content)); // Decode Base64 content
+
+                                            // Step 2: Find the highest key and add the new guest
+                                            const keys = Object.keys(content).map(Number);
+                                            const newNumber = keys.length ? Math.max(...keys) + 1 : 1;
+                                            content[newNumber] = guestName;
+
+                                            // Step 3: Update names.json on GitHub
+                                            const updatedContent = btoa(JSON.stringify(content, null, 2)); // Encode to Base64
+                                            const putFileResponse = await fetch(`${apiBaseUrl}/repos/${owner}/${repo}/contents/${filePath}`, {
+                                                method: "PUT",
+                                                headers: {
+                                                    Authorization: `Bearer ${token}`,
+                                                    "Content-Type": "application/json",
+                                                },
+                                                body: JSON.stringify({
+                                                    message: `Add guest: ${guestName}`,
+                                                    content: updatedContent,
+                                                    sha: fileData.sha, // Required for updating the file
+                                                }),
+                                            });
+
+                                            if (putFileResponse.ok) {
+                                                const newUrl = `${baseUrl}?n=${newNumber}`;
+                                                $("#generated-link").text(`Generated URL: ${newUrl}`);
+                                                $("#copy-link").show().data("url", newUrl);
+                                            } else {
+                                                alert("Failed to update names.json on GitHub.");
+                                            }
+                                        } catch (error) {
+                                            console.error(error);
+                                            alert("Error occurred while updating names.json.");
+                                        }
                                     } else {
                                         alert("Please enter a guest name.");
                                     }
